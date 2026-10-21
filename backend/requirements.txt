@@ -1,0 +1,11 @@
+# Motor astronómico: Swiss Ephemeris (AGPL-3.0 o licencia profesional de Astrodienst).
+# pysweph es un fork de pyswisseph con ruedas precompiladas para Windows; importa como `swisseph`.
+pysweph==2.10.3.6
+fastapi==0.156.4
+uvicorn[standard]==0.54.0
+SQLAlchemy==2.1.5
+pydantic==2.14.1
+tzdata==2026.5
+timezonefinder==9.1.0
+httpx==0.28.1
+pytest==9.1.1
