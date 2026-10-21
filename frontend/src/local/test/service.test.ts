@@ -9,7 +9,8 @@ const P = (p: Partial<Personal>): Personal => ({ ...S.cleanPersonal({ mood: 3, .
 const cfg = S.DEFAULT_CONFIG
 
 beforeAll(async () => {
-  await S.seedDemo()
+  // Simula un navegador con el registro de ejemplo de versiones anteriores.
+  await S.createEntry(at('2024-04-08T11:07'), cfg, P({ mood: 5, what_happened: '[DEMOSTRACIÓN]' }), true)
   await S.saveSettings({ ...S.DEFAULT_SETTINGS, default_location: { name: 'Madrid', latitude: 40.4168, longitude: -3.7038, timezone: 'Europe/Madrid' } })
   // Cansancio con la Luna en Capricornio tropical; días normales intercalados.
   for (const d of ['2024-01-10', '2024-02-06', '2024-03-05', '2024-04-01']) {
@@ -21,9 +22,21 @@ beforeAll(async () => {
 })
 
 describe('bitácora', () => {
-  it('el registro de demostración existe una sola vez', async () => {
-    await S.seedDemo()
-    expect((await S.entries()).filter((e) => e.is_demo)).toHaveLength(1)
+  it('elimina el antiguo registro de demostración y conserva los reales', async () => {
+    const before = (await S.entries()).length
+    await S.removeDemo()
+    const after = await S.entries()
+    expect(after.some((e) => e.is_demo)).toBe(false)
+    expect(after).toHaveLength(before - 1)
+  })
+
+  it('no restaura registros de demostración desde copias antiguas', async () => {
+    const data = JSON.parse(await S.exportJson())
+    data.entries[0] = { ...data.entries[0], is_demo: true }
+    const r = await S.importBackup(data, 'replace')
+    expect(r.imported).toBe(data.entries.length - 1)
+    expect((await S.entries()).some((e) => e.is_demo)).toBe(false)
+    await S.importBackup({ ...data, entries: data.entries.map((e: object) => ({ ...e, is_demo: false })) }, 'replace')
   })
 
   it('ciclo de vida completo', async () => {

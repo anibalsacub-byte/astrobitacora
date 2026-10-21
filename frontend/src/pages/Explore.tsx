@@ -33,7 +33,6 @@ export default function Explore({ initial }: { initial?: { kind: Kind; value: st
   const [value, setValue] = useState(initial?.value ?? 'Cansancio')
   const [zodiac, setZodiac] = useState<Zodiac>(settings?.config.zodiac ?? 'sidereal')
   const [range, setRange] = useState({ date_from: '', date_to: '' })
-  const [includeDemo, setIncludeDemo] = useState(false)
   const [res, setRes] = useState<ExperienceInsights | null>(null)
   const [showEntries, setShowEntries] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +41,7 @@ export default function Explore({ initial }: { initial?: { kind: Kind; value: st
   const tags = settings?.custom_tags ?? []
 
   useEffect(() => {
-    const p: Record<string, string | boolean | string[] | undefined> = { zodiac, include_demo: includeDemo, ...range }
+    const p: Record<string, string | boolean | string[] | undefined> = { zodiac, ...range }
     if (kind === 'emotion') p.emotion = [value]
     if (kind === 'tag') p.tag = value
     if (kind === 'keyword') { if (value.trim().length < 2) return; p.q = value.trim() }
@@ -51,7 +50,7 @@ export default function Explore({ initial }: { initial?: { kind: Kind; value: st
     if (kind === 'negative') p.valence = 'negativo'
     if (kind === 'positive') p.valence = 'positivo'
     api.experience(p).then((r) => { setRes(r); setError(null) }).catch((e) => setError(e.message))
-  }, [kind, value, zodiac, range, includeDemo])
+  }, [kind, value, zodiac, range])
 
   const describe = () => {
     switch (kind) {
@@ -103,9 +102,7 @@ export default function Explore({ initial }: { initial?: { kind: Kind; value: st
             <select className="input w-auto py-0.5" value={zodiac} onChange={(e) => setZodiac(e.target.value as Zodiac)}>
               <option value="sidereal">Sideral</option><option value="tropical">Tropical</option>
             </select>
-          </label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={includeDemo} onChange={(e) => setIncludeDemo(e.target.checked)} /> Incluir el registro de demostración</label>
-        </div>
+          </label>        </div>
       </section>
 
       {error && <p className="text-mood-1">{error}</p>}

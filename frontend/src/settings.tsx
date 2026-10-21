@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api } from './api'
 import { requestPersistence } from './local/db'
-import { seedDemo } from './local/service'
+import { removeDemo } from './local/service'
 import type { Settings } from './types'
 
 interface Ctx {
@@ -18,8 +18,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      // Primer arranque: registro de demostración y petición de almacenamiento persistente.
-      await seedDemo().catch(() => {})
+      // Retira el antiguo registro de ejemplo y pide almacenamiento persistente.
+      await removeDemo().catch(() => {})
       requestPersistence()
       setSettings(await api.settings())
     })().catch((e) => setError(String(e.message ?? e)))

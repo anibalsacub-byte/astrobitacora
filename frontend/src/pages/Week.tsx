@@ -22,14 +22,13 @@ export default function Week() {
   const [from, setFrom] = useState(mondayOf(new Date()))
   const [to, setTo] = useState(addDays(mondayOf(new Date()), 6))
   const [zodiac, setZodiac] = useState<Zodiac>(settings?.config.zodiac ?? 'sidereal')
-  const [includeDemo, setIncludeDemo] = useState(false)
   const [res, setRes] = useState<PeriodInsights | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.period({ date_from: from, date_to: to, zodiac, include_demo: includeDemo })
+    api.period({ date_from: from, date_to: to, zodiac, include_demo: false })
       .then((r) => { setRes(r); setError(null) }).catch((e) => setError(e.message))
-  }, [from, to, zodiac, includeDemo])
+  }, [from, to, zodiac])
 
   const shift = (days: number) => { setFrom(addDays(from, days)); setTo(addDays(to, days)) }
   const len = Math.round((parse(to).getTime() - parse(from).getTime()) / 86400000) + 1
@@ -52,9 +51,7 @@ export default function Week() {
         <label><span className="label">Hasta</span><input type="date" className="input" value={to} onChange={(e) => e.target.value && setTo(e.target.value)} /></label>
         <label><span className="label">Zodiaco</span>
           <select className="input" value={zodiac} onChange={(e) => setZodiac(e.target.value as Zodiac)}><option value="sidereal">Sideral</option><option value="tropical">Tropical</option></select>
-        </label>
-        <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" checked={includeDemo} onChange={(e) => setIncludeDemo(e.target.checked)} /> Incluir demostración</label>
-      </section>
+        </label>      </section>
       {error && <p className="text-mood-1">{error}</p>}
 
       {res && (

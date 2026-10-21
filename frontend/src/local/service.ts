@@ -393,7 +393,8 @@ export async function exportCsv(): Promise<string> {
 export async function importBackup(data: unknown, mode: 'merge' | 'replace') {
   const d = data as { format?: string; entries?: Record<string, unknown>[]; settings?: Settings }
   if (d?.format !== 'astrobitacora-backup' || !Array.isArray(d.entries)) throw new ServiceError('El archivo no es una copia de seguridad de AstroBitácora.')
-  const parsed: StoredEntry[] = d.entries.map((it, i) => {
+  // Los registros de demostración de versiones anteriores no se restauran.
+  const parsed: StoredEntry[] = d.entries.filter((it) => !it.is_demo).map((it, i) => {
     try {
       const snap = it.astro_snapshot as StoredEntry['astro_snapshot']
       if (!snap?.tropical || !snap?.sidereal) throw new Error('falta la carta')
@@ -463,24 +464,13 @@ export async function geoReverse(lat: number, lon: number): Promise<Place> {
   return { name, latitude: lat, longitude: lon, timezone: tz }
 }
 
-// --- Registro de demostración -------------------------------------------------------
+// --- Registro de demostración (retirado) --------------------------------------------
 
-export async function seedDemo() {
-  if (await kvGet('demo_seeded')) return
-  await kvSet('demo_seeded', true)
-  await createEntry(
-    { local_datetime: '2024-04-08T11:07', timezone: 'America/Mazatlan', utc_offset_minutes: null, fold: 0, location_name: 'Mazatlán, Sinaloa, México', latitude: 23.2494, longitude: -106.4111 },
-    DEFAULT_CONFIG,
-    {
-      mood: 5, emotions: ['Alegría', 'Entusiasmo', 'Gratitud'], intensity: 9,
-      what_happened: '[DEMOSTRACIÓN] Registro de ejemplo: observación del eclipse total de Sol del 8 de abril de 2024.',
-      how_felt: '[DEMOSTRACIÓN] Texto ficticio para mostrar cómo se ve una entrada. Puedes borrarla desde el calendario.',
-      special: '[DEMOSTRACIÓN] Totalidad visible durante unos 4 minutos.', special_valence: 'positivo',
-      tags: ['viajes', 'demostración'], sleep_hours: 6.5, energy: 8, stress: 3,
-      notes: 'Las posiciones astronómicas de esta entrada son reales; el contenido personal es ficticio.',
-    },
-    true,
-  )
+/** Las primeras versiones creaban un registro de ejemplo; se elimina una vez de los navegadores que lo tengan. */
+export async function removeDemo() {
+  if (await kvGet('demo_removed')) return
+  for (const e of await allEntries()) if (e.is_demo) await dbDelete(e.id!)
+  await kvSet('demo_removed', true)
 }
 
 export { EMOTIONS, TimeError }

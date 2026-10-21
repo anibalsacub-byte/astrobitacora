@@ -53,16 +53,15 @@ export default function Patterns() {
   const [filters, setFilters] = useState<string[]>([])
   const [fPlanet, setFPlanet] = useState('moon')
   const [fSign, setFSign] = useState('virgo')
-  const [includeDemo, setIncludeDemo] = useState(true)
   const [periods, setPeriods] = useState({ a_from: '', a_to: '', b_from: '', b_to: '' })
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.stats({ zodiac, group, ...range, filters, include_demo: includeDemo, ...periods })
+    api.stats({ zodiac, group, ...range, filters, ...periods })
       .then((s) => { setStats(s); setError(null) })
       .catch((e) => setError(e.message))
-  }, [zodiac, group, range, filters, includeDemo, periods])
+  }, [zodiac, group, range, filters, periods])
 
   const groupLabel = GROUPS.find((x) => x.value === group)?.label ?? group
   const groupData = stats?.groups.map((r) => ({ ...r, value: r.mood_mean ?? 0 })) ?? []
@@ -106,9 +105,6 @@ export default function Patterns() {
               </button>
             )
           })}
-          <label className="ml-auto flex items-center gap-2 pb-2 text-sm">
-            <input type="checkbox" checked={includeDemo} onChange={(e) => setIncludeDemo(e.target.checked)} /> Incluir registro de demostración
-          </label>
         </div>
       </section>
 
