@@ -115,23 +115,24 @@ export default function MyChart() {
   return (
     <div className="space-y-6">
       <h1 className="text-4xl text-navy">Mi carta</h1>
-      {natal && (
-        <section className="card flex flex-wrap items-center justify-between gap-3 p-4">
-          <div className="min-w-0">
-            <div className="label">Mi carta natal</div>
-            <p>{fmtDate(natal.moment.local_datetime)}, {fmtTime(natal.moment.local_datetime)} · {natal.moment.location_name}</p>
-          </div>
+      <section className="card flex flex-wrap items-center justify-between gap-3 border-gold p-4">
+        <div className="min-w-0">
+          <div className="label">☉ Mi carta natal</div>
+          {natal
+            ? <p>{fmtDate(natal.moment.local_datetime)}, {fmtTime(natal.moment.local_datetime)} · {natal.moment.location_name}</p>
+            : <p>Aún no la has guardado. Escribe abajo tu fecha, hora y lugar de nacimiento, pulsa <b>Calcular carta</b> y luego <b>Guardar como mi carta natal</b>.</p>}
+        </div>
+        {natal && (
           <div className="flex flex-wrap gap-2">
             {!isNatal && <button className="btn" disabled={busy} onClick={loadNatal}>Ver mi carta natal</button>}
             <button className="btn btn-danger" disabled={busy} onClick={() => setConfirm('delete')}>Eliminar</button>
           </div>
-        </section>
-      )}
+        )}
+      </section>
       <section className="card p-5">
         <h2 className="mb-1 text-2xl text-navy">Consulta histórica</h2>
         <p className="mb-3 text-sm text-ink-soft">
           Cualquier fecha entre los años 1 y 2999. Las fechas anteriores a 1582 se interpretan en el calendario gregoriano proléptico.
-          {!natal && ' Calcula tu fecha de nacimiento y guárdala como carta natal para tenerla siempre aquí.'}
         </p>
         <MomentForm key={formKey} config={config} onConfigChange={setConfig} onSubmit={calc} busy={busy}
                     initial={natal ? natal.moment : settings?.default_location ? { place: settings.default_location } : undefined}
@@ -145,22 +146,19 @@ export default function MyChart() {
                               title={moment ? 'Añade las posiciones de la fecha que elijas a la carta calculada' : 'Primero calcula una carta'}>
                         ◎ Superponer fecha
                       </button>
+                      {!isNatal && (
+                        <button type="button" className="btn btn-gold" disabled={busy || !moment} onClick={() => (natal ? setConfirm('replace') : saveNatal())}
+                                title={moment ? 'Guarda la carta calculada para tenerla siempre aquí' : 'Primero calcula una carta'}>
+                          ☉ {natal ? 'Reemplazar mi carta natal' : 'Guardar como mi carta natal'}
+                        </button>
+                      )}
                     </>} />
       </section>
       {error && <p className="text-mood-1">{error}</p>}
       {result && (
         <section ref={chartRef} className="scroll-mt-4 space-y-3">
           <ChartView result={result} title={isNatal ? 'Mi carta natal' : moment ? 'Carta Astral' : 'Posiciones de ahora'} overlay={overlay} overlayLabel={overlayLabel} />
-          {moment && (
-            <div className="flex flex-wrap gap-2">
-              <button className="btn" disabled={busy} onClick={compare}>Comparar con las posiciones actuales</button>
-              {!isNatal && (
-                <button className="btn btn-gold" disabled={busy} onClick={() => (natal ? setConfirm('replace') : saveNatal())}>
-                  ☉ {natal ? 'Reemplazar mi carta natal' : 'Guardar como mi carta natal'}
-                </button>
-              )}
-            </div>
-          )}
+          {moment && <button className="btn" disabled={busy} onClick={compare}>Comparar con las posiciones actuales</button>}
           {moment && isNatal && <p className="text-sm text-ink-soft">Guardada solo en este dispositivo e incluida en tu copia de seguridad.</p>}
         </section>
       )}
