@@ -55,7 +55,7 @@ export default function Week() {
       {error && <p className="text-mood-1">{error}</p>}
 
       {res && (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <section className="card space-y-4 p-4">
             <h2 className="text-2xl text-navy">Lo que registraste</h2>
             {dates.length <= 31 && (

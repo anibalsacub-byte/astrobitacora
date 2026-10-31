@@ -20,7 +20,7 @@
   --font-body: "EB Garamond", Georgia, serif;
 }
 
-html, body { background: var(--color-cream); color: var(--color-ink); overflow-x: clip; }
+html, body { background: var(--color-cream); color: var(--color-ink); }
 body { font-family: var(--font-body); font-size: 17px; line-height: 1.5; }
 h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: .01em; }
 

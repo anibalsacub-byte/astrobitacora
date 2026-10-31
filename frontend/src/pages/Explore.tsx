@@ -172,7 +172,7 @@ export default function Explore({ initial }: { initial?: { kind: Kind; value: st
               <button className="text-navy underline decoration-gold-soft underline-offset-4" onClick={() => setShowEntries(!showEntries)}>
                 {showEntries ? '▾' : '▸'} Ver los {res.n} registros
               </button>
-              {showEntries && <div className="mt-2 grid gap-2 md:grid-cols-2">{res.entries.map((e) => <EntryCard key={e.id} e={e} />)}</div>}
+              {showEntries && <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">{res.entries.map((e) => <EntryCard key={e.id} e={e} />)}</div>}
             </section>
           )}
           <p className="max-w-3xl rounded border border-gold-soft bg-[#f7efd9] px-4 py-2 text-sm">{res.note}</p>

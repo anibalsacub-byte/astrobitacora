@@ -4,7 +4,7 @@ import { SIGN_BY_KEY, fmtDate, g, visibleBodies } from '../../lib/astro'
 import NorthIndianChart from './NorthIndianChart'
 import SouthIndianChart from './SouthIndianChart'
 import WheelChart from './WheelChart'
-import { BODY, GLYPH, GOLD, INK, PAPER, SERIF, SOFT } from './common'
+import { BODY, GLYPH, GOLD, INK, OVERLAY, PAPER, SERIF, SOFT } from './common'
 import { Crescent, FieldLine, RisingSun, ScallopFrame, Sparkle, StarMedallion, Starburst, SunFace } from './Ornaments'
 
 const W = 600, H = 950
@@ -70,9 +70,10 @@ function Border() {
  * marco ondulado y Lagna / Chandralagna / Suryalagna. Los tres últimos muestran «tropical / sideral»
  * cuando se dispone de ambas cartas.
  */
-const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: ChartStyle; showNodes: boolean; title?: string }>(
-  function ChartSheet({ result, style, showNodes, title }, ref) {
+const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: ChartStyle; showNodes: boolean; title?: string; overlay?: ChartResult | null }>(
+  function ChartSheet({ result, style, showNodes, title, overlay }, ref) {
     const { chart, time, alt_chart } = result
+    const overBodies = overlay ? visibleBodies(overlay.chart, showNodes) : undefined
     const sid = chart.meta.zodiac === 'sidereal'
     const trop = sid ? alt_chart : chart
     const side = sid ? chart : alt_chart
@@ -115,7 +116,7 @@ const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: Chart
         ))}
 
         <ScallopFrame x={cx} y={cy} w={chartSize} h={chartSize} />
-        <ChartComp chart={chart} bodies={bodies} size={chartSize} x={cx} y={cy} />
+        <ChartComp chart={chart} bodies={bodies} overlay={overBodies} size={chartSize} x={cx} y={cy} />
 
         {bottom.map((b, i) => (
           <g key={b.label}>
@@ -145,10 +146,17 @@ const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: Chart
             </text>
           )
         })}
-        <text x={W / 2} y={858} textAnchor="middle" fontFamily={BODY} fontSize={9.5} fill={SOFT}>
+        {overlay && (
+          <text x={W / 2} y={849} textAnchor="middle" fontFamily={BODY} fontSize={11.5} fill={INK}>
+            <tspan fontWeight={600}>Negro:</tspan>{' carta calculada  ·  '}
+            <tspan fontWeight={600} fill={OVERLAY}>{'Azul: '}</tspan>
+            <tspan fill={OVERLAY}>{`ahora (${fmtDate(overlay.time.local)}, ${overlay.time.local.slice(11, 16)})`}</tspan>
+          </text>
+        )}
+        <text x={W / 2} y={861} textAnchor="middle" fontFamily={BODY} fontSize={9.5} fill={SOFT}>
           {`UTC ${time.utc.replace('T', ' ').replace('Z', '')} · ${chart.meta.engine}${sid ? ` · Ayanamsa ${chart.meta.ayanamsa_value?.toFixed(4)}°` : ''}`}
         </text>
-        <text x={W / 2} y={871} textAnchor="middle" fontFamily={BODY} fontSize={9.5} fill={SOFT}>
+        <text x={W / 2} y={873} textAnchor="middle" fontFamily={BODY} fontSize={9.5} fill={SOFT}>
           {style === 'wheel' ? `Casas: ${chart.meta.house_system_name}` : 'Casas védicas: signo entero desde el Lagna'}{' · ℞ = retrógrado aparente'}
         </text>
       </svg>

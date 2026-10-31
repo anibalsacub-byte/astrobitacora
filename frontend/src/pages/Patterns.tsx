@@ -114,7 +114,7 @@ export default function Patterns() {
           <p className="text-lg"><SummaryLine s={stats.overall} /></p>
           {stats.warnings.map((w) => <p key={w} className="text-sm text-mood-2">⚠︎ {w}</p>)}
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <Panel title="Evolución del estado de ánimo" note="Promedio diario (1 = muy mal, 5 = muy bien).">
               {stats.daily.length === 0 ? <p className="text-ink-soft">Sin datos.</p> : (
                 <ResponsiveContainer width="100%" height={240}>

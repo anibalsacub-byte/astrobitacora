@@ -1,6 +1,6 @@
 import type { Body, Chart } from '../../types'
-import { g, shortDeg } from '../../lib/astro'
-import { GLYPH, GOLD, INK, RETRO, RULE, SERIF, SOFT, gridLayout, type Pt } from './common'
+import { BodyMark, marksIn } from './BodyMark'
+import { GOLD, INK, RULE, SERIF, SOFT, gridLayout, type Pt } from './common'
 
 /**
  * Carta del Norte de la India: cuadrado con sus dos diagonales y un rombo que une los puntos medios.
@@ -27,6 +27,7 @@ const HOUSES: { poly: Pt[]; center: Pt; inner: Pt; kind: Kind }[] = [
   { poly: [TR, b, T], center: [300, 36], inner: b, kind: 'triH' },
 ]
 const MAX_ROWS: Record<Kind, number> = { diamond: 5, triH: 2, triV: 4 }
+const MAX_ROWS_DENSE: Record<Kind, number> = { diamond: 6, triH: 3, triV: 5 }
 
 function toward(p: Pt, q: Pt, dist: number): Pt {
   const dx = q[0] - p[0], dy = q[1] - p[1]
@@ -34,8 +35,8 @@ function toward(p: Pt, q: Pt, dist: number): Pt {
   return [p[0] + (dx / len) * dist, p[1] + (dy / len) * dist]
 }
 
-export default function NorthIndianChart({ chart, bodies, size, x = 0, y = 0 }: {
-  chart: Chart; bodies: Body[]; size: number; x?: number; y?: number
+export default function NorthIndianChart({ chart, bodies, overlay, size, x = 0, y = 0 }: {
+  chart: Chart; bodies: Body[]; overlay?: Body[]; size: number; x?: number; y?: number
 }) {
   const ascSign = chart.angles.asc.sign_index
   const k = size / 400
@@ -48,8 +49,12 @@ export default function NorthIndianChart({ chart, bodies, size, x = 0, y = 0 }: 
       {HOUSES.map((h, i) => {
         const signIdx = (ascSign + i) % 12
         const num = toward(h.inner, h.center, h.kind === 'diamond' ? 20 : 17)
-        const items = bodies.filter((bd) => bd.sign_index === signIdx)
-        const pts = gridLayout(items.length, h.center[0], h.center[1] + (i === 0 ? -8 : 0), MAX_ROWS[h.kind], 40, 15)
+        const items = marksIn(signIdx, bodies, overlay)
+        const dense = items.length > 4
+        const cy = h.center[1] + (i === 0 ? -8 : 0)
+        const pts = dense
+          ? gridLayout(items.length, h.center[0], cy, MAX_ROWS_DENSE[h.kind], 33, 12.5)
+          : gridLayout(items.length, h.center[0], cy, MAX_ROWS[h.kind], 40, 15)
         return (
           <g key={i}>
             <polygon points={h.poly.map((p) => p.join(',')).join(' ')} fill="transparent">
@@ -58,13 +63,8 @@ export default function NorthIndianChart({ chart, bodies, size, x = 0, y = 0 }: 
             <text x={num[0]} y={num[1] + 4} textAnchor="middle" fontFamily={SERIF} fontSize={13} fill={GOLD} fontWeight={600}>
               {signIdx + 1}
             </text>
-            {items.map((bd, j) => (
-              <text key={bd.key} x={pts[j][0]} y={pts[j][1] + 4.5} textAnchor="middle" fontSize={12.5}
-                    fill={bd.retrograde && !bd.is_node ? RETRO : INK}>
-                <tspan fontFamily={GLYPH}>{g(bd.symbol)}</tspan>
-                <tspan fontFamily={SERIF} fontSize={11.5}>{shortDeg(bd)}{bd.retrograde && !bd.is_node ? '℞' : ''}</tspan>
-                <title>{`${bd.name} ${bd.dms}${bd.retrograde && !bd.is_node ? ' (retrógrado aparente)' : ''}`}</title>
-              </text>
+            {items.map((m, j) => (
+              <BodyMark key={`${m.body.key}-${m.over}`} mark={m} x={pts[j][0]} y={pts[j][1]} dense={dense} />
             ))}
             {i === 0 && (
               <text x={200} y={152} textAnchor="middle" fontFamily={SERIF} fontSize={11} fontStyle="italic" fill={SOFT}>

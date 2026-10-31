@@ -1,6 +1,7 @@
 import type { Body, Chart } from '../../types'
-import { SIGNS, g, shortDeg } from '../../lib/astro'
-import { GLYPH, GOLD, INK, NAVY, RETRO, SERIF, SOFT, gridLayout } from './common'
+import { SIGNS, g } from '../../lib/astro'
+import { BodyMark, marksIn } from './BodyMark'
+import { GLYPH, GOLD, INK, NAVY, SERIF, SOFT, gridLayout } from './common'
 
 /**
  * Carta del Sur de la India: cuadrícula 4×4 con los signos fijos (Piscis arriba a la izquierda,
@@ -10,8 +11,8 @@ const CELL: [number, number][] = [
   [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [3, 3], [2, 3], [1, 3], [0, 3], [0, 2], [0, 1], [0, 0],
 ]
 
-export default function SouthIndianChart({ chart, bodies, size, x = 0, y = 0 }: {
-  chart: Chart; bodies: Body[]; size: number; x?: number; y?: number
+export default function SouthIndianChart({ chart, bodies, overlay, size, x = 0, y = 0 }: {
+  chart: Chart; bodies: Body[]; overlay?: Body[]; size: number; x?: number; y?: number
 }) {
   const ascSign = chart.angles.asc.sign_index
   const k = size / 400
@@ -20,8 +21,11 @@ export default function SouthIndianChart({ chart, bodies, size, x = 0, y = 0 }: 
       <rect x={0} y={0} width={400} height={400} fill="#fffdf6" stroke={INK} strokeWidth={1.6} />
       {CELL.map(([cx, cy], signIdx) => {
         const x0 = cx * 100, y0 = cy * 100
-        const items = bodies.filter((bd) => bd.sign_index === signIdx)
-        const pts = gridLayout(items.length, x0 + 50, y0 + 58, 4, 44, 15)
+        const items = marksIn(signIdx, bodies, overlay)
+        const dense = items.length > 4
+        const pts = dense
+          ? gridLayout(items.length, x0 + 50, y0 + 54, 5, items.length > 10 ? 30 : 42, 13)
+          : gridLayout(items.length, x0 + 50, y0 + 58, 4, 44, 15)
         const house = ((signIdx - ascSign + 12) % 12) + 1
         return (
           <g key={signIdx}>
@@ -37,13 +41,8 @@ export default function SouthIndianChart({ chart, bodies, size, x = 0, y = 0 }: 
                 <text x={x0 + 26} y={y0 + 95} fontFamily={SERIF} fontSize={10.5} fontStyle="italic" fill={NAVY}>Asc</text>
               </>
             )}
-            {items.map((bd, j) => (
-              <text key={bd.key} x={pts[j][0]} y={pts[j][1] + 4.5} textAnchor="middle" fontSize={12.5}
-                    fill={bd.retrograde && !bd.is_node ? RETRO : INK}>
-                <tspan fontFamily={GLYPH}>{g(bd.symbol)}</tspan>
-                <tspan fontFamily={SERIF} fontSize={11.5}>{shortDeg(bd)}{bd.retrograde && !bd.is_node ? '℞' : ''}</tspan>
-                <title>{`${bd.name} ${bd.dms}`}</title>
-              </text>
+            {items.map((m, j) => (
+              <BodyMark key={`${m.body.key}-${m.over}`} mark={m} x={pts[j][0]} y={pts[j][1]} dense={dense} />
             ))}
           </g>
         )

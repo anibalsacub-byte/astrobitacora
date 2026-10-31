@@ -88,7 +88,7 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-4xl text-navy">Calendario</h1>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className="card p-4">
           <div className="mb-3 flex items-center justify-between">
             <button className="btn btn-ghost" onClick={() => move(-1)} aria-label="Mes anterior">‹</button>
@@ -134,7 +134,7 @@ export default function CalendarPage() {
           <div className="flex items-end"><button className="btn">Buscar</button></div>
         </form>
         {results && (
-          <div className="mt-4 grid gap-2 md:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             {results.length === 0 ? <p className="text-ink-soft">Sin resultados.</p> : results.map((e) => <EntryCard key={e.id} e={e} />)}
           </div>
         )}

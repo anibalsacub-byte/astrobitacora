@@ -4,6 +4,7 @@ import { useSettings } from '../settings'
 import { exportPdf, exportPng, exportSvg } from '../lib/exportChart'
 import { g, signLabel, systemLabel } from '../lib/astro'
 import ChartSheet from './charts/ChartSheet'
+import { OVERLAY } from './charts/common'
 import Modal from './Modal'
 import PlanetDetail from './PlanetDetail'
 import PositionsTable from './PositionsTable'
@@ -14,6 +15,8 @@ const STYLES: { key: ChartStyle; label: string }[] = [
   { key: 'wheel', label: 'Rueda occidental' },
 ]
 
+const ZOOMS = [50, 80, 100, 150, 200]
+
 export function Warnings({ items }: { items: string[] }) {
   if (!items.length) return null
   return (
@@ -23,11 +26,15 @@ export function Warnings({ items }: { items: string[] }) {
   )
 }
 
-export default function ChartView({ result, title, compact }: { result: ChartResult; title?: string; compact?: boolean }) {
+export default function ChartView({ result, title, compact, overlay }: {
+  result: ChartResult; title?: string; compact?: boolean
+  /** Posiciones que se dibujan sobre la misma carta (Superponer). */
+  overlay?: ChartResult | null
+}) {
   const { settings } = useSettings()
   const [style, setStyle] = useState<ChartStyle>(settings?.chart_style ?? 'south')
   const [zoom, setZoom] = useState(false)
-  const [scale, setScale] = useState(1.4)
+  const [scale, setScale] = useState(100)
   const [detail, setDetail] = useState<Body | null>(null)
   const [busy, setBusy] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -53,20 +60,20 @@ export default function ChartView({ result, title, compact }: { result: ChartRes
   const sun = chart.bodies.find((b) => b.key === 'sun')!
 
   return (
-    <div className={compact ? '' : 'grid gap-6 lg:grid-cols-[minmax(0,560px)_1fr]'}>
-      <div>
+    <div className={compact ? '' : 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]'}>
+      <div className="min-w-0">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           {STYLES.map((s) => (
             <button key={s.key} className="chip" aria-pressed={style === s.key} onClick={() => setStyle(s.key)}>{s.label}</button>
           ))}
         </div>
         <div className="card overflow-hidden">
-          <button className="block w-full cursor-zoom-in" onClick={() => setZoom(true)} title="Ampliar carta">
-            <ChartSheet ref={svgRef} result={result} style={style} showNodes={showNodes} title={title} />
+          <button className="block w-full cursor-zoom-in" onClick={() => { setScale(100); setZoom(true) }} title="Ampliar o reducir la carta">
+            <ChartSheet ref={svgRef} result={result} style={style} showNodes={showNodes} title={title} overlay={overlay} />
           </button>
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
-          <button className="btn btn-ghost" onClick={() => setZoom(true)}>⤢ Ampliar</button>
+          <button className="btn btn-ghost" onClick={() => { setScale(100); setZoom(true) }}>⤢ Zoom</button>
           <button className="btn btn-ghost" disabled={busy} onClick={() => doExport('png')}>Exportar PNG</button>
           <button className="btn btn-ghost" disabled={busy} onClick={() => doExport('pdf')}>Exportar PDF</button>
           <button className="btn btn-ghost" disabled={busy} onClick={() => doExport('svg')}>SVG</button>
@@ -74,7 +81,7 @@ export default function ChartView({ result, title, compact }: { result: ChartRes
       </div>
 
       {!compact && (
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div className="card p-4">
             <div className="label mb-1">Sistema</div>
             <div className="font-display text-xl text-navy">{systemLabel(chart)}</div>
@@ -96,19 +103,32 @@ export default function ChartView({ result, title, compact }: { result: ChartRes
             </div>
             <PositionsTable result={result} showNodes={showNodes} onSelect={setDetail} />
           </div>
+          {overlay && (
+            <div className="card p-4">
+              <div className="mb-2 flex items-baseline justify-between gap-2">
+                <h3 className="text-xl" style={{ color: OVERLAY }}>Posiciones de ahora (superpuestas)</h3>
+                <span className="text-xs text-ink-soft">Pulsa un astro para ver su ficha</span>
+              </div>
+              <PositionsTable result={overlay} showNodes={showNodes} onSelect={(b) => setDetail(b)} />
+            </div>
+          )}
         </div>
       )}
 
       {zoom && (
-        <Modal title="Carta ampliada" onClose={() => setZoom(false)} wide>
-          <div className="mb-2 flex items-center gap-3">
-            <span className="label">Zoom</span>
-            <input type="range" min={1} max={3} step={0.1} value={scale} onChange={(e) => setScale(Number(e.target.value))} />
-            <span className="num text-sm">{Math.round(scale * 100)} %</span>
+        <Modal title="Zoom de la carta" onClose={() => setZoom(false)} wide>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            {ZOOMS.map((z) => (
+              <button key={z} className="chip num" aria-pressed={scale === z} onClick={() => setScale(z)}>{z} %</button>
+            ))}
+            <input type="range" className="min-w-24 flex-1" min={50} max={300} step={10} value={scale} aria-label="Zoom"
+                   onChange={(e) => setScale(Number(e.target.value))} />
+            <span className="num w-14 text-right text-sm">{scale} %</span>
           </div>
           <div className="max-h-[78vh] overflow-auto rounded border border-rule">
-            <div style={{ width: `${scale * 600}px`, maxWidth: 'none' }}>
-              <ChartSheet ref={zoomRef} result={result} style={style} showNodes={showNodes} title={title} />
+            {/* 100 % = el ancho disponible en la pantalla */}
+            <div className="mx-auto" style={{ width: `${scale}%`, maxWidth: scale > 100 ? 'none' : undefined }}>
+              <ChartSheet ref={zoomRef} result={result} style={style} showNodes={showNodes} title={title} overlay={overlay} />
             </div>
           </div>
           <p className="mt-2 text-sm text-ink-soft">
@@ -116,7 +136,9 @@ export default function ChartView({ result, title, compact }: { result: ChartRes
           </p>
         </Modal>
       )}
-      {detail && <PlanetDetail body={detail} result={result} onClose={() => setDetail(null)} />}
+      {detail && (
+        <PlanetDetail body={detail} result={overlay?.chart.bodies.includes(detail) ? overlay : result} onClose={() => setDetail(null)} />
+      )}
     </div>
   )
 }

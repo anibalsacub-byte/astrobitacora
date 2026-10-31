@@ -105,7 +105,7 @@ export default function Home() {
           </div>
         </div>
         {recent.length === 0 ? <p className="text-ink-soft">Aún no hay registros.</p> : (
-          <div className="grid gap-2 md:grid-cols-2">{recent.map((e) => <EntryCard key={e.id} e={e} />)}</div>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">{recent.map((e) => <EntryCard key={e.id} e={e} />)}</div>
         )}
       </section>
     </div>

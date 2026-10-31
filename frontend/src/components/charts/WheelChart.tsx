@@ -1,23 +1,33 @@
 import type { Body, Chart } from '../../types'
 import { SIGNS, g } from '../../lib/astro'
-import { GLYPH, GOLD, INK, NAVY, RETRO, RULE, SERIF, SOFT } from './common'
+import { GLYPH, GOLD, INK, NAVY, OVERLAY, RETRO, RULE, SERIF, SOFT } from './common'
 
-/** Rueda occidental: el Ascendente a la izquierda y las longitudes avanzando en sentido antihorario. */
-export default function WheelChart({ chart, bodies, size, x = 0, y = 0 }: {
-  chart: Chart; bodies: Body[]; size: number; x?: number; y?: number
-}) {
-  const asc = chart.angles.asc.longitude
-  const C = 200
-  const rOut = 196, rZod = 166, rPlanet = 140, rDeg = 120, rHouse = 72, rIn = 58
-  const ang = (lon: number) => ((180 + lon - asc) * Math.PI) / 180
-  const P = (lon: number, r: number) => [C + r * Math.cos(ang(lon)), C - r * Math.sin(ang(lon))] as const
-
-  // Separa glifos que caerían superpuestos (mínimo 9° de arco en pantalla).
-  const sorted = [...bodies].sort((p, q) => p.longitude - q.longitude)
+/** Longitudes de dibujo: separa los glifos que caerían superpuestos (mínimo 9° de arco en pantalla). */
+function spread(sorted: Body[]) {
   const disp = sorted.map((b) => b.longitude)
   for (let pass = 0; pass < 4; pass++) {
     for (let i = 1; i < disp.length; i++) if (disp[i] - disp[i - 1] < 9) disp[i] = disp[i - 1] + 9
   }
+  return disp
+}
+
+/**
+ * Rueda occidental: el Ascendente a la izquierda y las longitudes avanzando en sentido antihorario.
+ * Las posiciones superpuestas se dibujan en un anillo interior propio.
+ */
+export default function WheelChart({ chart, bodies, overlay, size, x = 0, y = 0 }: {
+  chart: Chart; bodies: Body[]; overlay?: Body[]; size: number; x?: number; y?: number
+}) {
+  const asc = chart.angles.asc.longitude
+  const C = 200
+  const rOut = 196, rZod = 166, rPlanet = 139, rDeg = 122, rOver = 104, rOverDeg = 89, rHouse = 72, rIn = 58
+  const ang = (lon: number) => ((180 + lon - asc) * Math.PI) / 180
+  const P = (lon: number, r: number) => [C + r * Math.cos(ang(lon)), C - r * Math.sin(ang(lon))] as const
+
+  const sorted = [...bodies].sort((p, q) => p.longitude - q.longitude)
+  const disp = spread(sorted)
+  const sortedOver = [...(overlay ?? [])].sort((p, q) => p.longitude - q.longitude)
+  const dispOver = spread(sortedOver)
 
   const cusps = chart.houses.cusps
   const k = size / 400
@@ -59,11 +69,11 @@ export default function WheelChart({ chart, bodies, size, x = 0, y = 0 }: {
       {(['asc', 'mc'] as const).map((key) => {
         const lon = chart.angles[key].longitude
         const [tx, ty] = P(lon, rOut + 0.1)
-        const [lx, ly] = P(lon, rZod - 14)
+        const [lx, ly] = P(lon, rZod - 10)
         return (
           <g key={key}>
             <circle cx={tx} cy={ty} r={2.2} fill={NAVY} />
-            <text x={lx} y={ly + 4} textAnchor="middle" fontFamily={SERIF} fontSize={10.5} fontWeight={600} fill={NAVY}>{key === 'asc' ? 'Asc' : 'MC'}</text>
+            <text x={lx} y={ly + 3.5} textAnchor="middle" fontFamily={SERIF} fontSize={9.5} fontWeight={600} fill={NAVY}>{key === 'asc' ? 'Asc' : 'MC'}</text>
           </g>
         )
       })}
@@ -80,6 +90,20 @@ export default function WheelChart({ chart, bodies, size, x = 0, y = 0 }: {
               {g(b.symbol)}<title>{`${b.name} ${b.sign_name} ${b.dms}`}</title>
             </text>
             <text x={dx} y={dy + 4} textAnchor="middle" fontFamily={SERIF} fontSize={10} fill={color}>
+              {Math.floor(b.degree_in_sign)}°{b.retrograde && !b.is_node ? '℞' : ''}
+            </text>
+          </g>
+        )
+      })}
+      {sortedOver.map((b, i) => {
+        const [gx, gy] = P(dispOver[i], rOver)
+        const [dx, dy] = P(dispOver[i], rOverDeg)
+        return (
+          <g key={`over-${b.key}`} fill={OVERLAY}>
+            <text x={gx} y={gy + 5} textAnchor="middle" fontFamily={GLYPH} fontSize={14}>
+              {g(b.symbol)}<title>{`Ahora: ${b.name} ${b.sign_name} ${b.dms}`}</title>
+            </text>
+            <text x={dx} y={dy + 3.5} textAnchor="middle" fontFamily={SERIF} fontSize={9}>
               {Math.floor(b.degree_in_sign)}°{b.retrograde && !b.is_node ? '℞' : ''}
             </text>
           </g>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { api } from '../api'
 import ChartView from '../components/ChartView'
 import ComparePanel from '../components/ComparePanel'
@@ -13,6 +13,9 @@ export default function MyChart() {
   const [moment, setMoment] = useState<MomentInput | null>(null)
   const [result, setResult] = useState<ChartResult | null>(null)
   const [cmp, setCmp] = useState<{ now: ChartResult; comparison: Comparison } | null>(null)
+  const [calcConfig, setCalcConfig] = useState<AstroConfig>(settings!.config)
+  const [overlay, setOverlay] = useState<ChartResult | null>(null)
+  const chartRef = useRef<HTMLElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { locate } = useGeolocation()
@@ -25,16 +28,32 @@ export default function MyChart() {
 
   const calc = (m: MomentInput) => run(async () => {
     setCmp(null)
+    setOverlay(null)
     setResult(await api.chart(m, config))
     setMoment(m)
+    setCalcConfig(config)
   })
 
   const nowChart = () => run(async () => {
     const place = settings?.default_location ?? await locate()
     setCmp(null)
+    setOverlay(null)
     setMoment(null)
     setResult(await api.now(place, config))
   })
+
+  // Añade las posiciones actuales a la carta calculada, sin sustituirla. Se recalculan en cada pulsación
+  // y usan el mismo sistema que la carta; las posiciones geocéntricas no dependen del lugar.
+  const superimpose = () => {
+    if (overlay) return setOverlay(null)
+    if (!moment) return
+    run(async () => {
+      const place = settings?.default_location
+        ?? { name: moment.location_name, latitude: moment.latitude, longitude: moment.longitude, timezone: moment.timezone }
+      setOverlay(await api.now(place, calcConfig))
+      chartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 
   const compare = () => moment && run(async () => {
     const r = await api.compareNow(moment, config, settings?.default_location ?? null)
@@ -49,12 +68,18 @@ export default function MyChart() {
         <p className="mb-3 text-sm text-ink-soft">Cualquier fecha entre los años 1 y 2999. Las fechas anteriores a 1582 se interpretan en el calendario gregoriano proléptico.</p>
         <MomentForm config={config} onConfigChange={setConfig} onSubmit={calc} busy={busy}
                     initial={settings?.default_location ? { place: settings.default_location } : undefined}
-                    extra={<button type="button" className="btn" disabled={busy} onClick={nowChart}>✦ Posiciones de ahora</button>} />
+                    extra={<>
+                      <button type="button" className="btn" disabled={busy} onClick={nowChart}>✦ Posiciones de ahora</button>
+                      <button type="button" className="btn btn-ghost" disabled={busy || !moment} aria-pressed={Boolean(overlay)} onClick={superimpose}
+                              title={moment ? 'Añade las posiciones de ahora a la carta calculada' : 'Primero calcula una carta'}>
+                        ◎ {overlay ? 'Quitar superposición' : 'Superponer'}
+                      </button>
+                    </>} />
       </section>
       {error && <p className="text-mood-1">{error}</p>}
       {result && (
-        <section className="space-y-3">
-          <ChartView result={result} title={moment ? 'Carta Astral' : 'Posiciones de ahora'} />
+        <section ref={chartRef} className="scroll-mt-4 space-y-3">
+          <ChartView result={result} title={moment ? 'Carta Astral' : 'Posiciones de ahora'} overlay={overlay} />
           {moment && <button className="btn" disabled={busy} onClick={compare}>Comparar con las posiciones actuales</button>}
         </section>
       )}
