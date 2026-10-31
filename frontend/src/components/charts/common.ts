@@ -6,6 +6,7 @@ export const PAPER = '#fbf7ee'
 export const RULE = '#b9a477'
 export const RETRO = '#8a3b3b'
 export const OVERLAY = '#1b6ca8'
+export const OVERLAY_ASC = '#2e7d32'
 
 export const SERIF = 'Cormorant Garamond, EB Garamond, Georgia, serif'
 export const BODY = 'EB Garamond, Georgia, serif'

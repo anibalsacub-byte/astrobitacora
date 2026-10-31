@@ -1,6 +1,6 @@
-import type { Body, Chart } from '../../types'
+import type { Angle, Body, Chart } from '../../types'
 import { SIGNS, g } from '../../lib/astro'
-import { BodyMark, marksIn } from './BodyMark'
+import { BodyMark, markKey, marksIn } from './BodyMark'
 import { GLYPH, GOLD, INK, NAVY, SERIF, SOFT, gridLayout } from './common'
 
 /**
@@ -11,8 +11,8 @@ const CELL: [number, number][] = [
   [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [3, 3], [2, 3], [1, 3], [0, 3], [0, 2], [0, 1], [0, 0],
 ]
 
-export default function SouthIndianChart({ chart, bodies, overlay, size, x = 0, y = 0 }: {
-  chart: Chart; bodies: Body[]; overlay?: Body[]; size: number; x?: number; y?: number
+export default function SouthIndianChart({ chart, bodies, overlay, overlayAsc, size, x = 0, y = 0 }: {
+  chart: Chart; bodies: Body[]; overlay?: Body[]; overlayAsc?: Angle; size: number; x?: number; y?: number
 }) {
   const ascSign = chart.angles.asc.sign_index
   const k = size / 400
@@ -21,7 +21,7 @@ export default function SouthIndianChart({ chart, bodies, overlay, size, x = 0, 
       <rect x={0} y={0} width={400} height={400} fill="#fffdf6" stroke={INK} strokeWidth={1.6} />
       {CELL.map(([cx, cy], signIdx) => {
         const x0 = cx * 100, y0 = cy * 100
-        const items = marksIn(signIdx, bodies, overlay)
+        const items = marksIn(signIdx, bodies, overlay, overlayAsc)
         const dense = items.length > 4
         const pts = dense
           ? gridLayout(items.length, x0 + 50, y0 + 54, 5, items.length > 10 ? 30 : 42, 13)
@@ -42,7 +42,7 @@ export default function SouthIndianChart({ chart, bodies, overlay, size, x = 0, 
               </>
             )}
             {items.map((m, j) => (
-              <BodyMark key={`${m.body.key}-${m.over}`} mark={m} x={pts[j][0]} y={pts[j][1]} dense={dense} />
+              <BodyMark key={markKey(m)} mark={m} x={pts[j][0]} y={pts[j][1]} dense={dense} />
             ))}
           </g>
         )

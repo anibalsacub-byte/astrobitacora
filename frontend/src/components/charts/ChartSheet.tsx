@@ -4,7 +4,7 @@ import { SIGN_BY_KEY, fmtDate, g, visibleBodies } from '../../lib/astro'
 import NorthIndianChart from './NorthIndianChart'
 import SouthIndianChart from './SouthIndianChart'
 import WheelChart from './WheelChart'
-import { BODY, GLYPH, GOLD, INK, OVERLAY, PAPER, SERIF, SOFT } from './common'
+import { BODY, GLYPH, GOLD, INK, OVERLAY, OVERLAY_ASC, PAPER, SERIF, SOFT } from './common'
 import { Crescent, FieldLine, RisingSun, ScallopFrame, Sparkle, StarMedallion, Starburst, SunFace } from './Ornaments'
 
 const W = 600, H = 950
@@ -116,7 +116,7 @@ const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: Chart
         ))}
 
         <ScallopFrame x={cx} y={cy} w={chartSize} h={chartSize} />
-        <ChartComp chart={chart} bodies={bodies} overlay={overBodies} size={chartSize} x={cx} y={cy} />
+        <ChartComp chart={chart} bodies={bodies} overlay={overBodies} overlayAsc={overlay?.chart.angles.asc} size={chartSize} x={cx} y={cy} />
 
         {bottom.map((b, i) => (
           <g key={b.label}>
@@ -147,10 +147,12 @@ const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: Chart
           )
         })}
         {overlay && (
-          <text x={W / 2} y={849} textAnchor="middle" fontFamily={BODY} fontSize={11.5} fill={INK}>
-            <tspan fontWeight={600}>Negro:</tspan>{' carta calculada  ·  '}
+          <text x={W / 2} y={849} textAnchor="middle" fontFamily={BODY} fontSize={11} fill={INK}>
+            <tspan fontWeight={600}>Negro:</tspan>{' carta  ·  '}
             <tspan fontWeight={600} fill={OVERLAY}>{'Azul: '}</tspan>
-            <tspan fill={OVERLAY}>{`${overlayLabel} (${fmtDate(overlay.time.local)}, ${overlay.time.local.slice(11, 16)})`}</tspan>
+            <tspan fill={OVERLAY}>{`${overlayLabel} (${fmtDate(overlay.time.local)}, ${overlay.time.local.slice(11, 16)})  ·  `}</tspan>
+            <tspan fontWeight={600} fill={OVERLAY_ASC}>{'Verde: '}</tspan>
+            <tspan fill={OVERLAY_ASC}>{`ASC en ${trunc(/^[-\d.]/.test(overlay.location_name) ? overlay.location_name : overlay.location_name.split(',')[0], 24)}`}</tspan>
           </text>
         )}
         <text x={W / 2} y={861} textAnchor="middle" fontFamily={BODY} fontSize={9.5} fill={SOFT}>

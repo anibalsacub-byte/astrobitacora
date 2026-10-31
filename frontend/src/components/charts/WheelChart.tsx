@@ -1,6 +1,6 @@
-import type { Body, Chart } from '../../types'
+import type { Angle, Body, Chart } from '../../types'
 import { SIGNS, g } from '../../lib/astro'
-import { GLYPH, GOLD, INK, NAVY, OVERLAY, RETRO, RULE, SERIF, SOFT } from './common'
+import { GLYPH, GOLD, INK, NAVY, OVERLAY, OVERLAY_ASC, RETRO, RULE, SERIF, SOFT } from './common'
 
 /** Longitudes de dibujo: separa los glifos que caerían superpuestos (mínimo 9° de arco en pantalla). */
 function spread(sorted: Body[]) {
@@ -15,8 +15,8 @@ function spread(sorted: Body[]) {
  * Rueda occidental: el Ascendente a la izquierda y las longitudes avanzando en sentido antihorario.
  * Las posiciones superpuestas se dibujan en un anillo interior propio.
  */
-export default function WheelChart({ chart, bodies, overlay, size, x = 0, y = 0 }: {
-  chart: Chart; bodies: Body[]; overlay?: Body[]; size: number; x?: number; y?: number
+export default function WheelChart({ chart, bodies, overlay, overlayAsc, size, x = 0, y = 0 }: {
+  chart: Chart; bodies: Body[]; overlay?: Body[]; overlayAsc?: Angle; size: number; x?: number; y?: number
 }) {
   const asc = chart.angles.asc.longitude
   const C = 200
@@ -95,6 +95,21 @@ export default function WheelChart({ chart, bodies, overlay, size, x = 0, y = 0 
           </g>
         )
       })}
+      {overlayAsc && (() => {
+        const [x1, y1] = P(overlayAsc.longitude, rIn)
+        const [x2, y2] = P(overlayAsc.longitude, rZod)
+        const [lx, ly] = P(overlayAsc.longitude, rIn + 18)
+        return (
+          <g>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={OVERLAY_ASC} strokeWidth={1.2} strokeDasharray="4 3" />
+            <text x={lx} y={ly + 3.5} textAnchor="middle" fontFamily={SERIF} fontSize={9.5} fontWeight={700} fill={OVERLAY_ASC}
+                  paintOrder="stroke" stroke="#fffdf6" strokeWidth={3}>
+              ASC {Math.floor(overlayAsc.degree_in_sign)}°
+              <title>{`Ascendente superpuesto: ${overlayAsc.sign_name} ${overlayAsc.dms}`}</title>
+            </text>
+          </g>
+        )
+      })()}
       {sortedOver.map((b, i) => {
         const [gx, gy] = P(dispOver[i], rOver)
         const [dx, dy] = P(dispOver[i], rOverDeg)

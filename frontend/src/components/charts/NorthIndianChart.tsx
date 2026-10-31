@@ -1,5 +1,5 @@
-import type { Body, Chart } from '../../types'
-import { BodyMark, marksIn } from './BodyMark'
+import type { Angle, Body, Chart } from '../../types'
+import { BodyMark, markKey, marksIn } from './BodyMark'
 import { GOLD, INK, RULE, SERIF, SOFT, gridLayout, type Pt } from './common'
 
 /**
@@ -35,8 +35,8 @@ function toward(p: Pt, q: Pt, dist: number): Pt {
   return [p[0] + (dx / len) * dist, p[1] + (dy / len) * dist]
 }
 
-export default function NorthIndianChart({ chart, bodies, overlay, size, x = 0, y = 0 }: {
-  chart: Chart; bodies: Body[]; overlay?: Body[]; size: number; x?: number; y?: number
+export default function NorthIndianChart({ chart, bodies, overlay, overlayAsc, size, x = 0, y = 0 }: {
+  chart: Chart; bodies: Body[]; overlay?: Body[]; overlayAsc?: Angle; size: number; x?: number; y?: number
 }) {
   const ascSign = chart.angles.asc.sign_index
   const k = size / 400
@@ -49,7 +49,7 @@ export default function NorthIndianChart({ chart, bodies, overlay, size, x = 0, 
       {HOUSES.map((h, i) => {
         const signIdx = (ascSign + i) % 12
         const num = toward(h.inner, h.center, h.kind === 'diamond' ? 20 : 17)
-        const items = marksIn(signIdx, bodies, overlay)
+        const items = marksIn(signIdx, bodies, overlay, overlayAsc)
         const dense = items.length > 4
         const cy = h.center[1] + (i === 0 ? -8 : 0)
         const pts = dense
@@ -64,7 +64,7 @@ export default function NorthIndianChart({ chart, bodies, overlay, size, x = 0, 
               {signIdx + 1}
             </text>
             {items.map((m, j) => (
-              <BodyMark key={`${m.body.key}-${m.over}`} mark={m} x={pts[j][0]} y={pts[j][1]} dense={dense} />
+              <BodyMark key={markKey(m)} mark={m} x={pts[j][0]} y={pts[j][1]} dense={dense} />
             ))}
             {i === 0 && (
               <text x={200} y={152} textAnchor="middle" fontFamily={SERIF} fontSize={11} fontStyle="italic" fill={SOFT}>

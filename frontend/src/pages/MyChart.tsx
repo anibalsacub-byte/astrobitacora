@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import ChartView from '../components/ChartView'
 import ComparePanel from '../components/ComparePanel'
-import { useGeolocation } from '../components/LocationPicker'
+import LocationPicker, { useGeolocation } from '../components/LocationPicker'
 import Modal from '../components/Modal'
 import MomentForm, { nowIn } from '../components/MomentForm'
 import { fmtDate, fmtTime } from '../lib/astro'
 import { useSettings } from '../settings'
-import type { AstroConfig, ChartResult, Comparison, MomentInput } from '../types'
+import type { AstroConfig, ChartResult, Comparison, MomentInput, Place } from '../types'
 
 export default function MyChart() {
   const { settings, save } = useSettings()
@@ -23,6 +23,7 @@ export default function MyChart() {
   const [overlayLabel, setOverlayLabel] = useState('ahora')
   const [picker, setPicker] = useState(false)
   const [pick, setPick] = useState({ date: nowIn(null).slice(0, 10), time: '12:00' })
+  const [pickPlace, setPickPlace] = useState<Place | null>(null)
   const chartRef = useRef<HTMLElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -92,11 +93,11 @@ export default function MyChart() {
   const overlayPlace = (m: MomentInput) => settings?.default_location
     ?? { name: m.location_name, latitude: m.latitude, longitude: m.longitude, timezone: m.timezone }
 
-  // Igual que Superponer, pero con la fecha y hora elegidas. El lugar solo sirve para interpretar la hora.
+  // Igual que Superponer, pero con la fecha, hora y lugar elegidos; el lugar determina el ascendente.
   const superimposeDate = () => {
     if (!moment) return
     run(async () => {
-      const p = overlayPlace(moment)
+      const p = pickPlace ?? overlayPlace(moment)
       setOverlay(await api.chart({
         local_datetime: `${pick.date}T${pick.time}:00`, timezone: p.timezone, utc_offset_minutes: null, fold: 0,
         location_name: p.name, latitude: p.latitude, longitude: p.longitude,
@@ -142,7 +143,7 @@ export default function MyChart() {
                               title={moment ? 'Añade las posiciones de ahora a la carta calculada' : 'Primero calcula una carta'}>
                         ◎ {overlay ? 'Quitar superposición' : 'Superponer'}
                       </button>
-                      <button type="button" className="btn btn-ghost" disabled={busy || !moment} onClick={() => { setError(null); setPicker(true) }}
+                      <button type="button" className="btn btn-ghost" disabled={busy || !moment} onClick={() => { setError(null); if (moment) setPickPlace((p) => p ?? overlayPlace(moment)); setPicker(true) }}
                               title={moment ? 'Añade las posiciones de la fecha que elijas a la carta calculada' : 'Primero calcula una carta'}>
                         ◎ Superponer fecha
                       </button>
@@ -175,6 +176,10 @@ export default function MyChart() {
               <label><span className="label">Hora</span>
                 <input type="time" className="input num" required value={pick.time} onChange={(e) => setPick({ ...pick, time: e.target.value })} />
               </label>
+            </div>
+            <div>
+              <span className="label">Lugar (determina el ascendente)</span>
+              <LocationPicker value={pickPlace} onChange={setPickPlace} />
             </div>
             {error && <p className="text-sm text-mood-1">{error}</p>}
             <div className="flex gap-2">
