@@ -101,7 +101,7 @@ export default function WheelChart({ chart, bodies, overlay, size, x = 0, y = 0 
         return (
           <g key={`over-${b.key}`} fill={OVERLAY}>
             <text x={gx} y={gy + 5} textAnchor="middle" fontFamily={GLYPH} fontSize={14}>
-              {g(b.symbol)}<title>{`Ahora: ${b.name} ${b.sign_name} ${b.dms}`}</title>
+              {g(b.symbol)}<title>{`Superpuesto: ${b.name} ${b.sign_name} ${b.dms}`}</title>
             </text>
             <text x={dx} y={dy + 3.5} textAnchor="middle" fontFamily={SERIF} fontSize={9}>
               {Math.floor(b.degree_in_sign)}°{b.retrograde && !b.is_node ? '℞' : ''}

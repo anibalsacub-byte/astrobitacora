@@ -12,6 +12,8 @@ iPhone. Todo ocurre **en el dispositivo de cada persona**:
   nadie, ni quien publica la web, puede leer los diarios.
 - Cada persona hace y restaura sus copias de seguridad (JSON) desde Configuración, también para pasar sus datos a
   otro dispositivo.
+- En Mi carta se puede guardar una carta natal: aparece sola al entrar y permite superponer el cielo de ahora. Sus
+  datos se guardan en el dispositivo y viajan en la copia de seguridad.
 
 ## Uso para desarrollo
 

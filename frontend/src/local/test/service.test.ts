@@ -122,6 +122,25 @@ describe('copias de seguridad', () => {
     expect(await S.lastBackup()).toBeTruthy()
   })
 
+  it('la carta natal viaja en la copia y se conserva o recupera al restaurar', async () => {
+    const natal = { moment: at('1990-06-15T10:30'), config: cfg, saved_at: '2026-10-30T00:00:00Z' }
+    const s = await S.getSettings()
+    await S.saveSettings({ ...s, natal })
+    const data = JSON.parse(await S.exportJson())
+    expect(data.settings.natal.moment.local_datetime).toBe('1990-06-15T10:30')
+
+    await S.saveSettings({ ...s, natal: null })
+    await S.importBackup({ ...data, entries: [] }, 'merge')
+    expect((await S.getSettings()).natal?.moment.local_datetime).toBe('1990-06-15T10:30')
+
+    // Añadir registros de otra copia no reemplaza la carta natal de este dispositivo.
+    const mine = { ...natal, moment: at('2001-01-01T00:00') }
+    await S.saveSettings({ ...s, natal: mine })
+    await S.importBackup({ ...data, entries: [] }, 'merge')
+    expect((await S.getSettings()).natal?.moment.local_datetime).toBe('2001-01-01T00:00')
+    await S.saveSettings(s)
+  })
+
   it('rechaza archivos que no son copias', async () => {
     await expect(S.importBackup({ foo: 1 }, 'merge')).rejects.toThrow()
   })

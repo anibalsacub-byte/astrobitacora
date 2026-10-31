@@ -4,7 +4,7 @@ import { GLYPH, INK, OVERLAY, RETRO, SERIF } from './common'
 
 export interface Mark {
   body: Body
-  /** true si pertenece a las posiciones superpuestas («ahora»). */
+  /** true si pertenece a las posiciones superpuestas. */
   over: boolean
 }
 
@@ -25,7 +25,7 @@ export function BodyMark({ mark, x, y, dense }: { mark: Mark; x: number; y: numb
     <text x={x} y={y + 4.5} textAnchor="middle" fontSize={dense ? 10.5 : 12.5} fill={color} fontWeight={over ? 600 : undefined}>
       <tspan fontFamily={GLYPH}>{g(b.symbol)}</tspan>
       <tspan fontFamily={SERIF} fontSize={dense ? 9.5 : 11.5}>{shortDeg(b)}{retro ? '℞' : ''}</tspan>
-      <title>{`${over ? 'Ahora: ' : ''}${b.name} ${b.dms}${retro ? ' (retrógrado aparente)' : ''}`}</title>
+      <title>{`${over ? 'Superpuesto: ' : ''}${b.name} ${b.dms}${retro ? ' (retrógrado aparente)' : ''}`}</title>
     </text>
   )
 }

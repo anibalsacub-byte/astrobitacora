@@ -150,7 +150,15 @@ export interface Revision {
   changes: Record<string, { antes: unknown; después: unknown }>
 }
 
+/** Datos de nacimiento guardados: la carta se recalcula a partir de ellos al abrir Mi carta. */
+export interface NatalData {
+  moment: MomentInput
+  config: AstroConfig
+  saved_at: string
+}
+
 export interface Settings {
+  natal?: NatalData | null
   config: AstroConfig
   chart_style: ChartStyle
   show_nodes: boolean

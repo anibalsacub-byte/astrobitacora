@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import type { Body, ChartResult, ChartStyle } from '../types'
 import { useSettings } from '../settings'
 import { exportPdf, exportPng, exportSvg } from '../lib/exportChart'
-import { g, signLabel, systemLabel } from '../lib/astro'
+import { fmtDate, g, signLabel, systemLabel } from '../lib/astro'
 import ChartSheet from './charts/ChartSheet'
 import { OVERLAY } from './charts/common'
 import Modal from './Modal'
@@ -26,10 +26,12 @@ export function Warnings({ items }: { items: string[] }) {
   )
 }
 
-export default function ChartView({ result, title, compact, overlay }: {
+export default function ChartView({ result, title, compact, overlay, overlayLabel }: {
   result: ChartResult; title?: string; compact?: boolean
   /** Posiciones que se dibujan sobre la misma carta (Superponer). */
   overlay?: ChartResult | null
+  /** Nombre de esas posiciones en la leyenda: «ahora» o «fecha elegida». */
+  overlayLabel?: string
 }) {
   const { settings } = useSettings()
   const [style, setStyle] = useState<ChartStyle>(settings?.chart_style ?? 'south')
@@ -69,7 +71,7 @@ export default function ChartView({ result, title, compact, overlay }: {
         </div>
         <div className="card overflow-hidden">
           <button className="block w-full cursor-zoom-in" onClick={() => { setScale(100); setZoom(true) }} title="Ampliar o reducir la carta">
-            <ChartSheet ref={svgRef} result={result} style={style} showNodes={showNodes} title={title} overlay={overlay} />
+            <ChartSheet ref={svgRef} result={result} style={style} showNodes={showNodes} title={title} overlay={overlay} overlayLabel={overlayLabel} />
           </button>
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -106,7 +108,7 @@ export default function ChartView({ result, title, compact, overlay }: {
           {overlay && (
             <div className="card p-4">
               <div className="mb-2 flex items-baseline justify-between gap-2">
-                <h3 className="text-xl" style={{ color: OVERLAY }}>Posiciones de ahora (superpuestas)</h3>
+                <h3 className="text-xl" style={{ color: OVERLAY }}>{overlayLabel === 'ahora' || !overlayLabel ? 'Posiciones de ahora' : `Posiciones del ${fmtDate(overlay.time.local)}`} (superpuestas)</h3>
                 <span className="text-xs text-ink-soft">Pulsa un astro para ver su ficha</span>
               </div>
               <PositionsTable result={overlay} showNodes={showNodes} onSelect={(b) => setDetail(b)} />
@@ -128,7 +130,7 @@ export default function ChartView({ result, title, compact, overlay }: {
           <div className="max-h-[78vh] overflow-auto rounded border border-rule">
             {/* 100 % = el ancho disponible en la pantalla */}
             <div className="mx-auto" style={{ width: `${scale}%`, maxWidth: scale > 100 ? 'none' : undefined }}>
-              <ChartSheet ref={zoomRef} result={result} style={style} showNodes={showNodes} title={title} overlay={overlay} />
+              <ChartSheet ref={zoomRef} result={result} style={style} showNodes={showNodes} title={title} overlay={overlay} overlayLabel={overlayLabel} />
             </div>
           </div>
           <p className="mt-2 text-sm text-ink-soft">

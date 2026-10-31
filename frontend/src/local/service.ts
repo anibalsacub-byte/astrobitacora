@@ -414,6 +414,10 @@ export async function importBackup(data: unknown, mode: 'merge' | 'replace') {
   if (mode === 'replace') {
     await clearEntries()
     if (d.settings) await saveSettings({ ...DEFAULT_SETTINGS, ...d.settings })
+  } else if (d.settings?.natal) {
+    // Al añadir registros no se tocan los ajustes, salvo recuperar la carta natal si aquí no hay ninguna.
+    const current = await getSettings()
+    if (!current.natal) await saveSettings({ ...current, natal: d.settings.natal })
   }
   for (const e of parsed) await putEntry(e)
   return { imported: parsed.length, mode }

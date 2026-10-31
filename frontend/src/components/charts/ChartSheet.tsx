@@ -70,8 +70,8 @@ function Border() {
  * marco ondulado y Lagna / Chandralagna / Suryalagna. Los tres últimos muestran «tropical / sideral»
  * cuando se dispone de ambas cartas.
  */
-const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: ChartStyle; showNodes: boolean; title?: string; overlay?: ChartResult | null }>(
-  function ChartSheet({ result, style, showNodes, title, overlay }, ref) {
+const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: ChartStyle; showNodes: boolean; title?: string; overlay?: ChartResult | null; overlayLabel?: string }>(
+  function ChartSheet({ result, style, showNodes, title, overlay, overlayLabel = 'ahora' }, ref) {
     const { chart, time, alt_chart } = result
     const overBodies = overlay ? visibleBodies(overlay.chart, showNodes) : undefined
     const sid = chart.meta.zodiac === 'sidereal'
@@ -150,7 +150,7 @@ const ChartSheet = forwardRef<SVGSVGElement, { result: ChartResult; style: Chart
           <text x={W / 2} y={849} textAnchor="middle" fontFamily={BODY} fontSize={11.5} fill={INK}>
             <tspan fontWeight={600}>Negro:</tspan>{' carta calculada  ·  '}
             <tspan fontWeight={600} fill={OVERLAY}>{'Azul: '}</tspan>
-            <tspan fill={OVERLAY}>{`ahora (${fmtDate(overlay.time.local)}, ${overlay.time.local.slice(11, 16)})`}</tspan>
+            <tspan fill={OVERLAY}>{`${overlayLabel} (${fmtDate(overlay.time.local)}, ${overlay.time.local.slice(11, 16)})`}</tspan>
           </text>
         )}
         <text x={W / 2} y={861} textAnchor="middle" fontFamily={BODY} fontSize={9.5} fill={SOFT}>
